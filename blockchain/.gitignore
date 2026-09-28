@@ -1,0 +1,28 @@
+# Dependencies and generated files
+**/node_modules/
+**/dist/
+**/build/
+**/cache/
+**/artifacts/
+**/coverage/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+**/keystore/
+**/.keystore/
+*.pem
+*.key
+
+# Local database
+backend/data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Editor and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
