@@ -1,0 +1,73 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "SupplyChainVm",
+  "sourceName": "contracts/SupplyChain.t.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "checkTopic1",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "checkTopic2",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "checkTopic3",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "checkData",
+          "type": "bool"
+        },
+        {
+          "internalType": "address",
+          "name": "emitter",
+          "type": "address"
+        }
+      ],
+      "name": "expectEmit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "reason",
+          "type": "bytes"
+        }
+      ],
+      "name": "expectRevert",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "prank",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/SupplyChain.t.sol",
+  "buildInfoId": "solc-0_8_34-a5098ad9eb8b06238aab065d54fda4aaa85d7089"
+}

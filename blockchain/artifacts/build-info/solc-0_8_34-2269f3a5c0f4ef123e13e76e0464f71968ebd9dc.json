@@ -1,0 +1,46 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_34-2269f3a5c0f4ef123e13e76e0464f71968ebd9dc",
+  "solcVersion": "0.8.34",
+  "solcLongVersion": "0.8.34+commit.80d5c536",
+  "compilerType": "solc",
+  "userSourceNameMap": {
+    "contracts/Counter.sol": "project/contracts/Counter.sol",
+    "contracts/SupplyChain.sol": "project/contracts/SupplyChain.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "osaka",
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/Counter.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.34;\n\ncontract Counter {\n  uint public x;\n\n  event Increment(uint by);\n\n  function inc() public {\n    x++;\n    emit Increment(1);\n  }\n\n  function incBy(uint by) public {\n    require(by > 0, \"incBy: increment should be positive\");\n    x += by;\n    emit Increment(by);\n  }\n}\n"
+      },
+      "project/contracts/SupplyChain.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.24;\r\n\r\ncontract SupplyChain {\r\n    enum Role {\r\n        None,\r\n        Manufacturer,\r\n        Distributor,\r\n        Seller\r\n    }\r\n\r\n    struct Participant {\r\n        Role role;\r\n        bool active;\r\n    }\r\n\r\n    struct Product {\r\n        string productId;\r\n        address manufacturer;\r\n        address currentCustodian;\r\n        uint256 createdAt;\r\n        bool exists;\r\n    }\r\n\r\n    address public immutable admin;\r\n\r\n    mapping(address => Participant) public participants;\r\n    mapping(string => Product) private products;\r\n\r\n    event ParticipantAuthorized(\r\n        address indexed account,\r\n        Role role\r\n    );\r\n\r\n    event ParticipantRevoked(address indexed account);\r\n\r\n    event ProductRegistered(\r\n        string productId,\r\n        address indexed manufacturer,\r\n        uint256 timestamp\r\n    );\r\n\r\n    event ProductTransferred(\r\n        string productId,\r\n        address indexed from,\r\n        address indexed to,\r\n        uint256 timestamp\r\n    );\r\n\r\n    modifier onlyAdmin() {\r\n        require(msg.sender == admin, \"Only admin\");\r\n        _;\r\n    }\r\n\r\n    modifier onlyActiveParticipant() {\r\n        require(\r\n            participants[msg.sender].active,\r\n            \"Participant is not active\"\r\n        );\r\n        _;\r\n    }\r\n\r\n    constructor() {\r\n        admin = msg.sender;\r\n    }\r\n\r\n    function authorizeParticipant(\r\n        address account,\r\n        Role role\r\n    ) external onlyAdmin {\r\n        require(account != address(0), \"Invalid address\");\r\n        require(account != admin, \"Admin is a separate account\");\r\n        require(role != Role.None, \"Invalid role\");\r\n\r\n        Participant storage participant = participants[account];\r\n\r\n        // Preserve the original role when reauthorizing an account.\r\n        require(\r\n            participant.role == Role.None || participant.role == role,\r\n            \"Cannot change assigned role\"\r\n        );\r\n        require(!participant.active, \"Already active\");\r\n\r\n        participant.role = role;\r\n        participant.active = true;\r\n\r\n        emit ParticipantAuthorized(account, role);\r\n    }\r\n\r\n    function revokeParticipant(\r\n        address account\r\n    ) external onlyAdmin {\r\n        require(participants[account].active, \"Not active\");\r\n\r\n        participants[account].active = false;\r\n\r\n        emit ParticipantRevoked(account);\r\n    }\r\n\r\n    function registerProduct(\r\n        string calldata productId\r\n    ) external onlyActiveParticipant {\r\n        require(\r\n            participants[msg.sender].role == Role.Manufacturer,\r\n            \"Only manufacturer\"\r\n        );\r\n\r\n        require(\r\n            bytes(productId).length > 0 &&\r\n            bytes(productId).length <= 64,\r\n            \"Product ID must be 1-64 bytes\"\r\n        );\r\n\r\n        require(!products[productId].exists, \"Product already exists\");\r\n\r\n        products[productId] = Product({\r\n            productId: productId,\r\n            manufacturer: msg.sender,\r\n            currentCustodian: msg.sender,\r\n            createdAt: block.timestamp,\r\n            exists: true\r\n        });\r\n\r\n        emit ProductRegistered(\r\n            productId,\r\n            msg.sender,\r\n            block.timestamp\r\n        );\r\n    }\r\n\r\n    function transferProduct(\r\n        string calldata productId,\r\n        address to\r\n    ) external onlyActiveParticipant {\r\n        Product storage product = products[productId];\r\n\r\n        require(product.exists, \"Product does not exist\");\r\n        require(\r\n            product.currentCustodian == msg.sender,\r\n            \"Not current custodian\"\r\n        );\r\n\r\n        require(to != address(0), \"Invalid recipient\");\r\n        require(to != msg.sender, \"Cannot transfer to yourself\");\r\n        require(participants[to].active, \"Recipient is not active\");\r\n\r\n        Role senderRole = participants[msg.sender].role;\r\n        Role recipientRole = participants[to].role;\r\n\r\n        bool validRoute =\r\n            (\r\n                senderRole == Role.Manufacturer &&\r\n                recipientRole == Role.Distributor\r\n            ) ||\r\n            (\r\n                senderRole == Role.Distributor &&\r\n                recipientRole == Role.Seller\r\n            );\r\n\r\n        require(validRoute, \"Invalid transfer route\");\r\n\r\n        product.currentCustodian = to;\r\n\r\n        emit ProductTransferred(\r\n            productId,\r\n            msg.sender,\r\n            to,\r\n            block.timestamp\r\n        );\r\n    }\r\n\r\n    function getProduct(\r\n        string calldata productId\r\n    ) external view returns (Product memory) {\r\n        require(products[productId].exists, \"Product does not exist\");\r\n\r\n        return products[productId];\r\n    }\r\n}"
+      }
+    }
+  }
+}
